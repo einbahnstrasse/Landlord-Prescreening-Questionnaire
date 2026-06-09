@@ -326,7 +326,7 @@
     margin-top: 14px; display: none;
   }
   .err-note.show { display: block; }
-  .field.invalid, .choices.invalid .opt { border-color: oklch(70% 0.14 22) !important; }
+  .field.invalid, .choices.invalid .opt, .scale.invalid .opt { border-color: oklch(70% 0.14 22) !important; }
 
   /* ---------- Success ---------- */
   .success { text-align: center; padding-top: 36px; }
@@ -768,11 +768,12 @@ function validateCurrent() {
 
   cur.querySelectorAll('[data-req]').forEach(req => {
     let filled;
-    if (req.classList.contains('choices')) {
-      filled = !!req.querySelector('input:checked');
+    const radios = req.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+    if (radios.length) { // any choice group (segmented, yes/no, or 1–10 scale)
+      filled = [...radios].some(r => r.checked);
       req.classList.toggle('invalid', !filled);
-    } else { // text/textarea
-      filled = req.value.trim().length > 0;
+    } else { // text/textarea/email/url
+      filled = (req.value || '').trim().length > 0;
       if (filled && typeof req.checkValidity === 'function') filled = req.checkValidity();
       req.classList.toggle('invalid', !filled);
     }
@@ -786,8 +787,8 @@ function validateCurrent() {
 
 // clear invalid state on interaction
 form.addEventListener('input', e => {
-  const choices = e.target.closest('.choices');
-  if (choices) choices.classList.remove('invalid');
+  const grp = e.target.closest('.choices, .scale');
+  if (grp) grp.classList.remove('invalid');
   if (e.target.classList.contains('field')) e.target.classList.remove('invalid');
 });
 
